@@ -1,0 +1,247 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SelectorQueue</name>
+    </assembly>
+    <members>
+        <member name="T:SelectorQueue.HeapEntry`1">
+            <summary>
+            Stores a queue item, its precomputed ordering keys, and its stable insertion sequence.
+            </summary>
+            <typeparam name="T">The queued value type.</typeparam>
+        </member>
+        <member name="M:SelectorQueue.HeapEntry`1.#ctor(`0,System.Object[],System.Int64)">
+            <summary>
+            Initializes a heap entry.
+            </summary>
+            <param name="value">The queued value.</param>
+            <param name="keys">The precomputed ordering keys for the value.</param>
+            <param name="sequence">The stable insertion sequence.</param>
+        </member>
+        <member name="P:SelectorQueue.HeapEntry`1.Value">
+            <summary>
+            Gets the queued value.
+            </summary>
+        </member>
+        <member name="P:SelectorQueue.HeapEntry`1.Keys">
+            <summary>
+            Gets the precomputed ordering keys.
+            </summary>
+        </member>
+        <member name="P:SelectorQueue.HeapEntry`1.Sequence">
+            <summary>
+            Gets the stable insertion sequence.
+            </summary>
+        </member>
+        <member name="T:SelectorQueue.IOrderingCriterion`1">
+            <summary>
+            Represents one compiled ordering criterion for queued items.
+            </summary>
+            <typeparam name="T">The queue item type.</typeparam>
+        </member>
+        <member name="M:SelectorQueue.IOrderingCriterion`1.Select(`0)">
+            <summary>
+            Extracts the comparison key for the supplied item.
+            </summary>
+            <param name="item">The item being enqueued.</param>
+            <returns>The extracted key value.</returns>
+        </member>
+        <member name="M:SelectorQueue.IOrderingCriterion`1.Compare(System.Object,System.Object)">
+            <summary>
+            Compares two previously extracted key values.
+            </summary>
+            <param name="left">The left key value.</param>
+            <param name="right">The right key value.</param>
+            <returns>
+            A value less than zero when <paramref name="left"/> sorts before <paramref name="right"/>,
+            zero when they are equivalent, or a value greater than zero otherwise.
+            </returns>
+        </member>
+        <member name="T:SelectorQueue.OrderingCriterion`2">
+            <summary>
+            Stores one ordering selector plus its comparison direction.
+            </summary>
+            <typeparam name="T">The queue item type.</typeparam>
+            <typeparam name="TKey">The extracted key type.</typeparam>
+        </member>
+        <member name="M:SelectorQueue.OrderingCriterion`2.#ctor(System.Func{`0,`1},System.Boolean)">
+            <summary>
+            Initializes a new ordering criterion.
+            </summary>
+            <param name="selector">The selector used to extract keys from queue items.</param>
+            <param name="descending"><c>true</c> for descending order; otherwise <c>false</c>.</param>
+        </member>
+        <member name="M:SelectorQueue.OrderingCriterion`2.Select(`0)">
+            <summary>
+            Extracts the comparison key for the supplied item.
+            </summary>
+            <param name="item">The item being enqueued.</param>
+            <returns>The extracted key value.</returns>
+        </member>
+        <member name="M:SelectorQueue.OrderingCriterion`2.Compare(System.Object,System.Object)">
+            <summary>
+            Compares two extracted key values using the configured direction.
+            </summary>
+            <param name="left">The left key value.</param>
+            <param name="right">The right key value.</param>
+            <returns>
+            A value less than zero when <paramref name="left"/> sorts before <paramref name="right"/>,
+            zero when they are equivalent, or a value greater than zero otherwise.
+            </returns>
+        </member>
+        <member name="T:SelectorQueue.SelectorQueueBuilder`1">
+            <summary>
+            Builds a <see cref="T:SelectorQueue.SelectorQueue`1"/> with immutable ordering.
+            </summary>
+            <typeparam name="T">The element type.</typeparam>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueueBuilder`1.OrderBy``1(System.Func{`0,``0})">
+            <summary>
+            Configures the primary ascending ordering selector and discards any previously configured ordering.
+            </summary>
+            <typeparam name="TKey">The key type.</typeparam>
+            <param name="selector">The selector used to extract the primary sort key.</param>
+            <returns>The current builder.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="selector"/> is null.</exception>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueueBuilder`1.OrderByDescending``1(System.Func{`0,``0})">
+            <summary>
+            Configures the primary descending ordering selector and discards any previously configured ordering.
+            </summary>
+            <typeparam name="TKey">The key type.</typeparam>
+            <param name="selector">The selector used to extract the primary sort key.</param>
+            <returns>The current builder.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="selector"/> is null.</exception>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueueBuilder`1.ThenBy``1(System.Func{`0,``0})">
+            <summary>
+            Appends an ascending secondary ordering selector.
+            </summary>
+            <typeparam name="TKey">The key type.</typeparam>
+            <param name="selector">The selector used to extract the secondary sort key.</param>
+            <returns>The current builder.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="selector"/> is null.</exception>
+            <exception cref="T:System.InvalidOperationException">Thrown when no primary ordering has been configured.</exception>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueueBuilder`1.ThenByDescending``1(System.Func{`0,``0})">
+            <summary>
+            Appends a descending secondary ordering selector.
+            </summary>
+            <typeparam name="TKey">The key type.</typeparam>
+            <param name="selector">The selector used to extract the secondary sort key.</param>
+            <returns>The current builder.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="selector"/> is null.</exception>
+            <exception cref="T:System.InvalidOperationException">Thrown when no primary ordering has been configured.</exception>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueueBuilder`1.Build">
+            <summary>
+            Builds a queue whose ordering configuration is frozen for the lifetime of the queue.
+            </summary>
+            <returns>A new queue instance.</returns>
+        </member>
+        <member name="T:SelectorQueue.SelectorQueue`1">
+            <summary>
+            A thread-safe ordered queue with immutable ordering and stable dequeue behavior for equal sort keys.
+            The queue owns items while they remain enqueued and will dispose queued values that implement
+            <see cref="T:System.IDisposable"/> when <see cref="M:SelectorQueue.SelectorQueue`1.Clear"/> or <see cref="M:SelectorQueue.SelectorQueue`1.Dispose"/> is called.
+            </summary>
+            <typeparam name="T">The element type.</typeparam>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueue`1.#ctor(SelectorQueue.IOrderingCriterion{`0}[])">
+            <summary>
+            Initializes a queue with the supplied immutable ordering criteria.
+            </summary>
+            <param name="criteria">The compiled ordering criteria used for all queue operations.</param>
+        </member>
+        <member name="P:SelectorQueue.SelectorQueue`1.Count">
+            <summary>
+            Gets the current number of items in the queue.
+            </summary>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueue`1.Enqueue(`0)">
+            <summary>
+            Enqueues an item. Selector delegates are evaluated before the item is inserted, so the queue remains unchanged if selector evaluation fails.
+            Ownership of the item transfers to the queue until it is dequeued or the queue is cleared or disposed.
+            </summary>
+            <param name="item">The item to enqueue.</param>
+            <exception cref="T:System.ObjectDisposedException">Thrown when the queue has already been disposed.</exception>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueue`1.Dequeue">
+            <summary>
+            Removes and returns the next item according to the queue ordering.
+            Ownership of the returned item transfers back to the caller.
+            </summary>
+            <returns>The next queued item.</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown when the queue is empty.</exception>
+            <exception cref="T:System.ObjectDisposedException">Thrown when the queue has already been disposed.</exception>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueue`1.TryDequeue(`0@)">
+            <summary>
+            Attempts to remove and return the next item according to the queue ordering.
+            Ownership of the returned item transfers back to the caller when the method succeeds.
+            </summary>
+            <param name="item">When this method returns, contains the dequeued item if present.</param>
+            <returns><c>true</c> when an item was dequeued; otherwise <c>false</c>.</returns>
+            <exception cref="T:System.ObjectDisposedException">Thrown when the queue has already been disposed.</exception>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueue`1.Peek">
+            <summary>
+            Returns the next item according to the queue ordering without removing it.
+            </summary>
+            <returns>The next queued item.</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown when the queue is empty.</exception>
+            <exception cref="T:System.ObjectDisposedException">Thrown when the queue has already been disposed.</exception>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueue`1.TryPeek(`0@)">
+            <summary>
+            Attempts to return the next item according to the queue ordering without removing it.
+            </summary>
+            <param name="item">When this method returns, contains the peeked item if present.</param>
+            <returns><c>true</c> when an item was present; otherwise <c>false</c>.</returns>
+            <exception cref="T:System.ObjectDisposedException">Thrown when the queue has already been disposed.</exception>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueue`1.Clear">
+            <summary>
+            Removes all queued items and disposes any queued values that implement <see cref="T:System.IDisposable"/>.
+            The queue retains its immutable ordering configuration.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">Thrown when the queue has already been disposed.</exception>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueue`1.Dispose">
+            <summary>
+            Disposes the queue and any queued values that implement <see cref="T:System.IDisposable"/>.
+            Items already dequeued are not affected.
+            </summary>
+        </member>
+        <member name="T:SelectorQueue.SelectorQueue">
+            <summary>
+            Factory methods for creating <see cref="T:SelectorQueue.SelectorQueue`1"/> instances with immutable ordering.
+            </summary>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueue.Create``1">
+            <summary>
+            Creates a FIFO queue with no explicit ordering selectors.
+            </summary>
+            <typeparam name="T">The element type.</typeparam>
+            <returns>A queue instance with immutable FIFO ordering.</returns>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueue.OrderBy``2(System.Func{``0,``1})">
+            <summary>
+            Creates a builder whose primary ordering is ascending by the supplied selector.
+            </summary>
+            <typeparam name="T">The element type.</typeparam>
+            <typeparam name="TKey">The key type.</typeparam>
+            <param name="selector">The selector used to extract the primary sort key.</param>
+            <returns>A builder that can be further configured and then built.</returns>
+        </member>
+        <member name="M:SelectorQueue.SelectorQueue.OrderByDescending``2(System.Func{``0,``1})">
+            <summary>
+            Creates a builder whose primary ordering is descending by the supplied selector.
+            </summary>
+            <typeparam name="T">The element type.</typeparam>
+            <typeparam name="TKey">The key type.</typeparam>
+            <param name="selector">The selector used to extract the primary sort key.</param>
+            <returns>A builder that can be further configured and then built.</returns>
+        </member>
+    </members>
+</doc>

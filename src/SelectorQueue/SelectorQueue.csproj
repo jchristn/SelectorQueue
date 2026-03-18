@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>1.0.0</Version>
+    <Authors>Joel Christner</Authors>
+    <Company>Joel Christner</Company>
+    <Description>Thread-safe, stable ordered queue for .NET with immutable builder-based ordering and heap-backed enqueue/dequeue operations.</Description>
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/jchristn/selectorqueue</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jchristn/selectorqueue</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>queue;priority;sorted;ordering;thread-safe</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+    <DocumentationFile>SelectorQueue.xml</DocumentationFile>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>SelectorQueue is a thread-safe, stable ordered queue for .NET. It accepts items in nondeterministic arrival order and dequeues them in a frozen sort order defined up front through a builder.</Title>
+    <Copyright>(c)2026</Copyright>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>Initial release</PackageReleaseNotes>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\assets\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\LICENSE.md" Pack="true" PackagePath="" />
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="SelectorQueue.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
