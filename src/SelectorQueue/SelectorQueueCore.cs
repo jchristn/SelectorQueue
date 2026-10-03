@@ -2,6 +2,7 @@ namespace SelectorQueue
 {
     using System;
     using System.Collections.Generic;
+    using System.Runtime.ExceptionServices;
 
     /// <summary>
     /// A thread-safe ordered queue with immutable ordering and stable dequeue behavior for equal sort keys.
@@ -14,6 +15,7 @@ namespace SelectorQueue
         private readonly object _Sync = new object();
         private readonly IOrderingCriterion<T>[] _Criteria;
         private readonly List<HeapEntry<T>> _Heap = new List<HeapEntry<T>>();
+        private readonly List<int> _PathBuffer = new List<int>();
         private long _SequenceCounter;
         private bool _Disposed;
 
@@ -62,6 +64,7 @@ namespace SelectorQueue
         /// <summary>
         /// Removes and returns the next item according to the queue ordering.
         /// Ownership of the returned item transfers back to the caller.
+        /// If a key comparison throws while the heap is reordered, the exception propagates and the queue is left unchanged.
         /// </summary>
         /// <returns>The next queued item.</returns>
         /// <exception cref="InvalidOperationException">Thrown when the queue is empty.</exception>
@@ -82,6 +85,7 @@ namespace SelectorQueue
         /// <summary>
         /// Attempts to remove and return the next item according to the queue ordering.
         /// Ownership of the returned item transfers back to the caller when the method succeeds.
+        /// If a key comparison throws while the heap is reordered, the exception propagates and the queue is left unchanged.
         /// </summary>
         /// <param name="item">When this method returns, contains the dequeued item if present.</param>
         /// <returns><c>true</c> when an item was dequeued; otherwise <c>false</c>.</returns>
@@ -145,8 +149,11 @@ namespace SelectorQueue
         /// <summary>
         /// Removes all queued items and disposes any queued values that implement <see cref="IDisposable"/>.
         /// The queue retains its immutable ordering configuration.
+        /// Every queued disposable is disposed even if some of them throw. The queue is empty when this method returns or throws.
+        /// If exactly one item throws, that exception is rethrown unchanged.
         /// </summary>
         /// <exception cref="ObjectDisposedException">Thrown when the queue has already been disposed.</exception>
+        /// <exception cref="AggregateException">Thrown when more than one queued item throws from its own <see cref="IDisposable.Dispose"/>; contains every such exception.</exception>
         public void Clear()
         {
             List<HeapEntry<T>> entriesToDispose;
@@ -163,8 +170,11 @@ namespace SelectorQueue
 
         /// <summary>
         /// Disposes the queue and any queued values that implement <see cref="IDisposable"/>.
-        /// Items already dequeued are not affected.
+        /// Items already dequeued are not affected. Calling this method more than once has no further effect.
+        /// Every queued disposable is disposed even if some of them throw, and the queue is closed when this method returns or throws.
+        /// If exactly one item throws, that exception is rethrown unchanged.
         /// </summary>
+        /// <exception cref="AggregateException">Thrown when more than one queued item throws from its own <see cref="IDisposable.Dispose"/>; contains every such exception.</exception>
         public void Dispose()
         {
             List<HeapEntry<T>> entriesToDispose;
@@ -203,9 +213,41 @@ namespace SelectorQueue
                 return;
             }
 
-            _Heap[0] = _Heap[lastIndex];
+            // Plan the sift-down path before mutating so a throwing comparison leaves the heap intact.
+            HeapEntry<T> last = _Heap[lastIndex];
+            _PathBuffer.Clear();
+            int index = 0;
+
+            while (true)
+            {
+                int left = (index * 2) + 1;
+                if (left >= lastIndex) break;
+
+                int right = left + 1;
+                int smallest = left;
+
+                if (right < lastIndex && CompareEntries(_Heap[right], _Heap[left]) < 0)
+                {
+                    smallest = right;
+                }
+
+                if (CompareEntries(_Heap[smallest], last) >= 0) break;
+
+                _PathBuffer.Add(smallest);
+                index = smallest;
+            }
+
             _Heap.RemoveAt(lastIndex);
-            SiftDown(0);
+
+            int holeIndex = 0;
+            for (int i = 0; i < _PathBuffer.Count; i++)
+            {
+                int childIndex = _PathBuffer[i];
+                _Heap[holeIndex] = _Heap[childIndex];
+                holeIndex = childIndex;
+            }
+
+            _Heap[holeIndex] = last;
         }
 
         private void Insert(HeapEntry<T> entry)
@@ -216,7 +258,8 @@ namespace SelectorQueue
                 return;
             }
 
-            List<int>? ancestorsToShift = null;
+            // Plan the sift-up path before mutating so a throwing comparison leaves the heap intact.
+            _PathBuffer.Clear();
             int insertionIndex = _Heap.Count;
 
             while (insertionIndex > 0)
@@ -224,57 +267,21 @@ namespace SelectorQueue
                 int parentIndex = (insertionIndex - 1) / 2;
                 if (CompareEntries(entry, _Heap[parentIndex]) >= 0) break;
 
-                if (ancestorsToShift == null)
-                {
-                    ancestorsToShift = new List<int>();
-                }
-
-                ancestorsToShift.Add(parentIndex);
+                _PathBuffer.Add(parentIndex);
                 insertionIndex = parentIndex;
             }
 
             _Heap.Add(entry);
 
-            if (ancestorsToShift == null) return;
-
             int holeIndex = _Heap.Count - 1;
-            for (int i = 0; i < ancestorsToShift.Count; i++)
+            for (int i = 0; i < _PathBuffer.Count; i++)
             {
-                int parentIndex = ancestorsToShift[i];
+                int parentIndex = _PathBuffer[i];
                 _Heap[holeIndex] = _Heap[parentIndex];
                 holeIndex = parentIndex;
             }
 
             _Heap[holeIndex] = entry;
-        }
-
-        private void SiftDown(int index)
-        {
-            while (true)
-            {
-                int left = (index * 2) + 1;
-                if (left >= _Heap.Count) return;
-
-                int right = left + 1;
-                int smallest = left;
-
-                if (right < _Heap.Count && CompareEntries(_Heap[right], _Heap[left]) < 0)
-                {
-                    smallest = right;
-                }
-
-                if (CompareEntries(_Heap[smallest], _Heap[index]) >= 0) return;
-
-                Swap(index, smallest);
-                index = smallest;
-            }
-        }
-
-        private void Swap(int left, int right)
-        {
-            HeapEntry<T> temp = _Heap[left];
-            _Heap[left] = _Heap[right];
-            _Heap[right] = temp;
         }
 
         private int CompareEntries(HeapEntry<T> left, HeapEntry<T> right)
@@ -290,18 +297,27 @@ namespace SelectorQueue
 
         private static void DisposeEntries(List<HeapEntry<T>> entries)
         {
+            List<Exception>? failures = null;
+
             for (int i = 0; i < entries.Count; i++)
             {
-                DisposeValue(entries[i].Value);
+                if (entries[i].Value is IDisposable disposable)
+                {
+                    try
+                    {
+                        disposable.Dispose();
+                    }
+                    catch (Exception exception)
+                    {
+                        if (failures == null) failures = new List<Exception>();
+                        failures.Add(exception);
+                    }
+                }
             }
-        }
 
-        private static void DisposeValue(T value)
-        {
-            if (value is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
+            if (failures == null) return;
+            if (failures.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
+            throw new AggregateException("Multiple queued items threw while being disposed.", failures);
         }
 
         private void ThrowIfDisposed()

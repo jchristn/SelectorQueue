@@ -23,6 +23,7 @@ namespace Test.Shared
                     SelectorConfigurationSuite.Create(),
                     SelectorBehaviorSuite.Create(),
                     OwnershipSuite.Create(),
+                    ExceptionSafetySuite.Create(),
                     ThreadSafetySuite.Create(),
                     ConcurrentLifecycleSuite.Create(),
                     RandomizedCorrectnessSuite.Create(),

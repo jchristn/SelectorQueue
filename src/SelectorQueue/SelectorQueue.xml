@@ -170,6 +170,7 @@
             <summary>
             Removes and returns the next item according to the queue ordering.
             Ownership of the returned item transfers back to the caller.
+            If a key comparison throws while the heap is reordered, the exception propagates and the queue is left unchanged.
             </summary>
             <returns>The next queued item.</returns>
             <exception cref="T:System.InvalidOperationException">Thrown when the queue is empty.</exception>
@@ -179,6 +180,7 @@
             <summary>
             Attempts to remove and return the next item according to the queue ordering.
             Ownership of the returned item transfers back to the caller when the method succeeds.
+            If a key comparison throws while the heap is reordered, the exception propagates and the queue is left unchanged.
             </summary>
             <param name="item">When this method returns, contains the dequeued item if present.</param>
             <returns><c>true</c> when an item was dequeued; otherwise <c>false</c>.</returns>
@@ -204,14 +206,20 @@
             <summary>
             Removes all queued items and disposes any queued values that implement <see cref="T:System.IDisposable"/>.
             The queue retains its immutable ordering configuration.
+            Every queued disposable is disposed even if some of them throw. The queue is empty when this method returns or throws.
+            If exactly one item throws, that exception is rethrown unchanged.
             </summary>
             <exception cref="T:System.ObjectDisposedException">Thrown when the queue has already been disposed.</exception>
+            <exception cref="T:System.AggregateException">Thrown when more than one queued item throws from its own <see cref="M:System.IDisposable.Dispose"/>; contains every such exception.</exception>
         </member>
         <member name="M:SelectorQueue.SelectorQueue`1.Dispose">
             <summary>
             Disposes the queue and any queued values that implement <see cref="T:System.IDisposable"/>.
-            Items already dequeued are not affected.
+            Items already dequeued are not affected. Calling this method more than once has no further effect.
+            Every queued disposable is disposed even if some of them throw, and the queue is closed when this method returns or throws.
+            If exactly one item throws, that exception is rethrown unchanged.
             </summary>
+            <exception cref="T:System.AggregateException">Thrown when more than one queued item throws from its own <see cref="M:System.IDisposable.Dispose"/>; contains every such exception.</exception>
         </member>
         <member name="T:SelectorQueue.SelectorQueue">
             <summary>

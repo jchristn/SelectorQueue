@@ -8,7 +8,12 @@
 
 ## What Changed
 
-Version `1.0.0` ships with:
+Version `1.0.1` is an exception-safety release:
+
+- a key comparison that throws during `Dequeue` or `TryDequeue` now leaves the queue unchanged instead of losing the head item
+- `Clear()` and `Dispose()` now dispose every queued item even when some items throw from their own `Dispose()`
+
+Version `1.0.0` shipped with:
 
 - a binary heap instead of sorted-list insertion/removal
 - immutable ordering configuration built before queue use
@@ -125,6 +130,10 @@ Queue operations are exposed on `SelectorQueue<T>`.
 - Empty `Dequeue()` and `Peek()` throw `InvalidOperationException`.
 - Empty `TryDequeue()` and `TryPeek()` return `false` and set the out value to `default`.
 - Selector delegates run before insertion. If a selector throws during `Enqueue`, the queue is unchanged.
+- Selectors run exactly once per criterion per `Enqueue`. Keys are captured at that moment, so mutating an item after it is enqueued does not change its position.
+- If a key comparison throws (for example a custom `IComparable<T>` that fails, or a key type that is not comparable), the exception propagates from `Enqueue`, `Dequeue`, or `TryDequeue` and the queue is left unchanged. No item is lost.
+- `Clear()` and `Dispose()` attempt to dispose every queued item. If exactly one item throws from its `Dispose()`, that exception is rethrown unchanged. If several throw, an `AggregateException` containing all of them is thrown. In both cases the queue is already empty (and, for `Dispose()`, closed).
+- Calling `Dispose()` more than once has no further effect.
 - Null keys follow `Comparer<TKey>.Default` semantics. For reference and nullable types, null sorts before non-null in ascending order.
 
 ## Thread Safety

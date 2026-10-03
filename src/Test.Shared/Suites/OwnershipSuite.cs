@@ -197,6 +197,96 @@ namespace Test.Shared.Suites
                         TestAssert.Throws<InvalidOperationException>(() => queue.Dispose(), "Dispose with throwing item");
                         TestAssert.Throws<ObjectDisposedException>(() => queue.Enqueue(new DisposableTracker("late")), "Queue closed");
                         queue.Dispose();
+                    }),
+
+                    TestCases.Sync(SuiteId, "ClearDisposesRemainingItemsAfterFailure", "Clear disposes every other item when one item's Dispose throws, rethrowing the original exception", () =>
+                    {
+                        SelectorQueue<DisposableTracker> queue = SelectorQueue
+                            .OrderBy<DisposableTracker, string>(x => x.Name)
+                            .Build();
+
+                        DisposableTracker before = new DisposableTracker("a");
+                        DisposableTracker throwing = new DisposableTracker("b", throwOnDispose: true);
+                        DisposableTracker after = new DisposableTracker("c");
+                        DisposableTracker last = new DisposableTracker("d");
+                        queue.Enqueue(last);
+                        queue.Enqueue(throwing);
+                        queue.Enqueue(after);
+                        queue.Enqueue(before);
+
+                        InvalidOperationException thrown = TestAssert.Throws<InvalidOperationException>(() => queue.Clear(), "Single failure type");
+                        TestAssert.True(thrown.Message.Contains("Tracker b"), "Original exception '" + thrown.Message + "'");
+                        TestAssert.Equal(1, before.DisposeCount, "Item a");
+                        TestAssert.Equal(1, throwing.DisposeCount, "Item b");
+                        TestAssert.Equal(1, after.DisposeCount, "Item c");
+                        TestAssert.Equal(1, last.DisposeCount, "Item d");
+                    }),
+
+                    TestCases.Sync(SuiteId, "ClearAggregatesMultipleDisposeFailures", "Clear wraps multiple Dispose failures in an AggregateException and still disposes every item", () =>
+                    {
+                        SelectorQueue<DisposableTracker> queue = SelectorQueue.Create<DisposableTracker>();
+                        List<DisposableTracker> trackers = new List<DisposableTracker>
+                        {
+                            new DisposableTracker("t0", throwOnDispose: true),
+                            new DisposableTracker("t1"),
+                            new DisposableTracker("t2", throwOnDispose: true),
+                            new DisposableTracker("t3")
+                        };
+
+                        foreach (DisposableTracker tracker in trackers) queue.Enqueue(tracker);
+
+                        AggregateException thrown = TestAssert.Throws<AggregateException>(() => queue.Clear(), "Multiple failures");
+                        TestAssert.Equal(2, thrown.InnerExceptions.Count, "Inner exception count");
+                        foreach (Exception inner in thrown.InnerExceptions)
+                        {
+                            TestAssert.True(inner is InvalidOperationException, "Inner type " + inner.GetType().Name);
+                        }
+
+                        foreach (DisposableTracker tracker in trackers)
+                        {
+                            TestAssert.Equal(1, tracker.DisposeCount, "Tracker " + tracker.Name);
+                        }
+
+                        TestAssert.Equal(0, queue.Count, "Queue emptied");
+                    }),
+
+                    TestCases.Sync(SuiteId, "DisposeAggregatesMultipleDisposeFailures", "Dispose wraps multiple Dispose failures, disposes every item, and closes the queue", () =>
+                    {
+                        SelectorQueue<DisposableTracker> queue = SelectorQueue.Create<DisposableTracker>();
+                        List<DisposableTracker> trackers = new List<DisposableTracker>();
+                        for (int i = 0; i < 6; i++)
+                        {
+                            DisposableTracker tracker = new DisposableTracker("t" + i, throwOnDispose: (i % 2) == 0);
+                            trackers.Add(tracker);
+                            queue.Enqueue(tracker);
+                        }
+
+                        AggregateException thrown = TestAssert.Throws<AggregateException>(() => queue.Dispose(), "Multiple failures");
+                        TestAssert.Equal(3, thrown.InnerExceptions.Count, "Inner exception count");
+                        foreach (DisposableTracker tracker in trackers)
+                        {
+                            TestAssert.Equal(1, tracker.DisposeCount, "Tracker " + tracker.Name);
+                        }
+
+                        TestAssert.Throws<ObjectDisposedException>(() => queue.Enqueue(new DisposableTracker("late")), "Queue closed");
+                        queue.Dispose();
+                        TestAssert.Equal(1, trackers[1].DisposeCount, "Second Dispose has no further effect");
+                    }),
+
+                    TestCases.Sync(SuiteId, "DisposeSingleFailureDisposesOthers", "Dispose rethrows a single Dispose failure unchanged after disposing every other item", () =>
+                    {
+                        SelectorQueue<DisposableTracker> queue = SelectorQueue.Create<DisposableTracker>();
+                        DisposableTracker first = new DisposableTracker("first");
+                        DisposableTracker throwing = new DisposableTracker("throwing", throwOnDispose: true);
+                        DisposableTracker third = new DisposableTracker("third");
+                        queue.Enqueue(first);
+                        queue.Enqueue(throwing);
+                        queue.Enqueue(third);
+
+                        TestAssert.Throws<InvalidOperationException>(() => queue.Dispose(), "Single failure type");
+                        TestAssert.Equal(1, first.DisposeCount, "First");
+                        TestAssert.Equal(1, throwing.DisposeCount, "Throwing");
+                        TestAssert.Equal(1, third.DisposeCount, "Third");
                     })
                 });
         }

@@ -1,7 +1,10 @@
 # Changelog
 
-## Unreleased
+## v1.0.1
 
+- Fixed: a key comparison that threw while the heap was reordered during `Dequeue`/`TryDequeue` dropped the head item. The sift-down path is now planned before any mutation, so the queue is left unchanged.
+- Fixed: if one queued item threw from `Dispose()`, `Clear()`/`Dispose()` stopped and the remaining items were never disposed. Every item is now disposed. A single failure is rethrown unchanged, and multiple failures are reported together in an `AggregateException`.
+- Reuse an internal path buffer for heap insert and remove to avoid per-operation list allocations.
 - Test infrastructure migrated to Touchstone: `Test.Shared` (shared descriptors), `Test.Automated` (console), `Test.Xunit`, and `Test.Nunit` runners.
 - Expanded positive and negative coverage: selector invocation and key capture, comparison failures, ownership and disposal edge cases, concurrent `Clear`/`Dispose` races, and additional ordering semantics.
 
