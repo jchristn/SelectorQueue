@@ -8,6 +8,8 @@
 
 ## What Changed
 
+Version `1.0.2` is a maintenance release that updates the test dependencies (Touchstone 0.2.0, NUnit 5, and current test SDK/adapters). The library API and behavior are unchanged.
+
 Version `1.0.1` is an exception-safety release:
 
 - a key comparison that throws during `Dequeue` or `TryDequeue` now leaves the queue unchanged instead of losing the head item
