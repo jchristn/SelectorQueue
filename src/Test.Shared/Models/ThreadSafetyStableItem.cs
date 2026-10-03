@@ -1,9 +1,9 @@
-namespace Test.Automated.Suites
+namespace Test.Shared.Models
 {
     /// <summary>
     /// Helper model used by thread-safety stability tests.
     /// </summary>
-    internal sealed class ThreadSafetyStableItem
+    public sealed class ThreadSafetyStableItem
     {
         /// <summary>
         /// Initializes a helper model used by thread-safety stability tests.

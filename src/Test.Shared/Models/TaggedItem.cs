@@ -1,4 +1,4 @@
-namespace Test.Automated
+namespace Test.Shared.Models
 {
     /// <summary>
     /// Helper class for testing insertion order stability.

@@ -131,6 +131,28 @@ Queue operations are exposed on `SelectorQueue<T>`.
 
 All queue operations are linearizable and safe for concurrent producers and consumers. Heap mutation occurs inside a single lock.
 
+## Testing
+
+Tests are written once as [Touchstone](https://github.com/jchristn/touchstone) descriptors in `src/Test.Shared` and run through any of three runners:
+
+```bash
+# Console runner (colored table output, optional JSON export)
+dotnet run --project src/Test.Automated -- --results results.json
+
+# xUnit runner
+dotnet test src/Test.Xunit
+
+# NUnit runner
+dotnet test src/Test.Nunit
+```
+
+| Project | Purpose |
+|---------|---------|
+| `Test.Shared` | Central source of truth for all test suites (depends only on `Touchstone.Core`) |
+| `Test.Automated` | Console runner using `Touchstone.Cli` |
+| `Test.Xunit` | xUnit runner using `Touchstone.XunitAdapter` |
+| `Test.Nunit` | NUnit runner using `Touchstone.NunitAdapter` |
+
 ## Framework
 
 The package targets `net8.0` and `net10.0`.

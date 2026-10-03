@@ -1,40 +1,45 @@
 namespace Test.Automated
 {
-    using Test.Automated.Suites;
+    using System;
+    using System.Threading.Tasks;
+    using Test.Shared;
+    using Touchstone.Cli;
 
     /// <summary>
-    /// Entry point for the automated SelectorQueue test runner.
+    /// Entry point for the automated SelectorQueue console test runner.
     /// </summary>
-    public class Program
+    public static class Program
     {
         /// <summary>
-        /// Runs the automated test suites.
+        /// Runs every shared test suite through the Touchstone console runner.
         /// </summary>
-        /// <param name="args">Command-line arguments passed to the test runner.</param>
+        /// <param name="args">Command-line arguments. Supports <c>--results &lt;path&gt;</c> and <c>--help</c>.</param>
         /// <returns><c>0</c> when all tests pass; otherwise <c>1</c>.</returns>
         public static async Task<int> Main(string[] args)
         {
-            if (args.Length > 0 && (args[0] == "--help" || args[0] == "-h"))
+            string? resultsPath = null;
+
+            for (int i = 0; i < args.Length; i++)
             {
-                Console.WriteLine("Usage: Test.Automated [--help]");
-                Console.WriteLine();
-                Console.WriteLine("Runs the SelectorQueue automated test suite.");
-                return 0;
+                if (args[i] == "--help" || args[i] == "-h")
+                {
+                    Console.WriteLine("Usage: Test.Automated [--results <path>] [--help]");
+                    Console.WriteLine();
+                    Console.WriteLine("Runs the SelectorQueue automated test suite.");
+                    Console.WriteLine("  --results <path>  Write JSON test results to the specified file.");
+                    return 0;
+                }
+
+                if (args[i] == "--results" && i + 1 < args.Length)
+                {
+                    resultsPath = args[i + 1];
+                    i++;
+                }
             }
 
-            TestRunner runner = new TestRunner("SELECTORQUEUE AUTOMATED TEST SUITE");
-
-            runner.AddSuite(new BasicOperationTests());
-            runner.AddSuite(new OrderingTests());
-            runner.AddSuite(new SelectorConfigurationTests());
-            runner.AddSuite(new ThreadSafetyTests());
-            runner.AddSuite(new RandomizedCorrectnessTests());
-            runner.AddSuite(new StressTests());
-            runner.AddSuite(new PerformanceTests());
-            runner.AddSuite(new EdgeCaseTests());
-            runner.AddSuite(new RealWorldScenarioTests());
-
-            return await runner.RunAllAsync().ConfigureAwait(false);
+            return await ConsoleRunner.RunAsync(
+                SelectorQueueSuites.All,
+                resultsPath: resultsPath).ConfigureAwait(false);
         }
     }
 }

@@ -1,5 +1,7 @@
-namespace Test.Automated
+namespace Test.Shared.Models
 {
+    using System;
+
     /// <summary>
     /// Simulates an S3 call recording metadata object.
     /// </summary>

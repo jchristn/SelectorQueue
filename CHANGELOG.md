@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Test infrastructure migrated to Touchstone: `Test.Shared` (shared descriptors), `Test.Automated` (console), `Test.Xunit`, and `Test.Nunit` runners.
+- Expanded positive and negative coverage: selector invocation and key capture, comparison failures, ownership and disposal edge cases, concurrent `Clear`/`Dispose` races, and additional ordering semantics.
+
 ## v1.0.0
 
 - Sorted-list insertion/removal with a heap-backed implementation.

@@ -1,9 +1,9 @@
-namespace Test.Automated.Suites
+namespace Test.Shared.Models
 {
     /// <summary>
     /// Helper model used by edge case tests.
     /// </summary>
-    internal sealed class EdgeCaseWorkItem
+    public sealed class EdgeCaseWorkItem
     {
         /// <summary>
         /// Initializes a helper model used by edge case tests.

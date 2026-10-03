@@ -1,9 +1,9 @@
-namespace Test.Automated.Suites
+namespace Test.Shared.Models
 {
     /// <summary>
     /// Helper model used by ordering tests.
     /// </summary>
-    internal sealed class OrderingWorkItem
+    public sealed class OrderingWorkItem
     {
         /// <summary>
         /// Initializes a helper model used by ordering tests.

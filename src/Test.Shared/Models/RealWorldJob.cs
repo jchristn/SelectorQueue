@@ -1,9 +1,11 @@
-namespace Test.Automated.Suites
+namespace Test.Shared.Models
 {
+    using System;
+
     /// <summary>
     /// Helper model used by real-world scheduling tests.
     /// </summary>
-    internal sealed class RealWorldJob
+    public sealed class RealWorldJob
     {
         /// <summary>
         /// Initializes a helper model used by real-world scheduling tests.

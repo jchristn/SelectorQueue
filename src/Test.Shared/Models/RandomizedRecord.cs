@@ -1,9 +1,9 @@
-namespace Test.Automated.Suites
+namespace Test.Shared.Models
 {
     /// <summary>
     /// Helper model used by randomized correctness tests.
     /// </summary>
-    internal sealed class RandomizedRecord
+    public sealed class RandomizedRecord
     {
         /// <summary>
         /// Initializes a helper model used by randomized correctness tests.
